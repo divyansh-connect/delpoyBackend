@@ -4,7 +4,6 @@ const paymentSchema = new mongoose.Schema(
   {
     amount: {
       type: String,
-      index: true,
     },
     paymentDate: {
       type: Date,
@@ -24,13 +23,11 @@ const libraryStudentsSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Seats",
       required: true,
-      unique: true,
     },
     seatNumber: {
       type: Number,
       required: true,
       index: true,
-      unique: true,
     },
     name: {
       type: String,

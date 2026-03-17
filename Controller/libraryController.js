@@ -9,7 +9,6 @@ exports.getSeats = async (req, res, next) => {
 exports.postAddStudent = async (req, res, next) => {
   const { stdId, stdName, stdPhone, stdJoin, stdGender, stdAmount, stdMember } =
     req.body;
-
   const joinDate = new Date(stdJoin);
   let validTill = new Date(joinDate);
   let paymentDate = null;
