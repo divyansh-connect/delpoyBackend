@@ -1,5 +1,5 @@
 const LibrarySeats = require("../Model/librarySeats");
-const LibraryStudents = require("../Model/LibraryStudents");
+const LibraryStudents = require("../Model/libraryStudents");
 
 exports.getSeats = async (req, res, next) => {
   const allSeats = await LibrarySeats.find().sort({ seatNumber: 1 });
