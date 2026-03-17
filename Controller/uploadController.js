@@ -1,5 +1,4 @@
 const fs = require("fs");
-const streamifier = require("streamifier");
 const cloudinary = require("../config/cloudinary");
 
 exports.postStdAdmPhoto = async (req, res, next) => {
