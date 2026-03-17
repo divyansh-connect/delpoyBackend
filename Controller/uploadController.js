@@ -31,43 +31,19 @@ exports.postStdyMaterialFile = async (req, res, next) => {
     if (!file) {
       return res.status(400).json({ message: "No file uploaded" });
     }
-    // if (file.mimetype !== "application/pdf") {
-    //   return res.status(400).json({
-    //     success: false,
-    //     message: "Only PDF files allowed",
-    //   });
-    // }
-    console.log("check Done 1");
-    // const stream = cloudinary.uploader.upload_stream(
-    //   {
-    //     folder: "studyMaterial",
-    //     resource_type: "raw",
-    //   },
-    //   (error, result) => {
-    //     if (error) {
-    //       console.error("Cloudinary error:", error);
-    //       return res.status(500).json({
-    //         success: false,
-    //         message: "Upload failed",
-    //       });
-    //     }
-    //     console.log(result);
-    //     res.status(200).json({
-    //       success: true,
-    //       url: result.secure_url,
-    //     });
-    //   },
-    // );
-
-    // streamifier.createReadStream(file.buffer).pipe(stream);
+    if (file.mimetype !== "application/pdf") {
+      return res.status(400).json({
+        success: false,
+        message: "Only PDF files allowed",
+      });
+    }
 
     const uploaded = await cloudinary.uploader.upload(file.path, {
       folder: "admissionPhoto",
       timeout: 60000,
     });
-    console.log("check Done 2");
+
     // fs.unlinkSync(file.path);
-    console.log("check Done 3", uploaded.secure_url);
     res.status(200).json({
       success: true,
       url: uploaded.secure_url,
