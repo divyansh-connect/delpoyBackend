@@ -46,10 +46,38 @@ exports.postInstitudeAdmForm = async (req, res, next) => {
 exports.getAllStudents = async (req, res, next) => {
   try {
     const stdLists = await InstitudeStudents.find().populate("courseId");
+
     res.status(200).json({
       success: true,
       message: "All students fetched",
       data: stdLists,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getStudentbyID = async (req, res, next) => {
+  const { sid } = req.params;
+  if (!sid) {
+    return res.status(400).json({
+      success: false,
+      message: "Student ID is required",
+    });
+  }
+  try {
+    const { sid } = req.params;
+    const std = await InstitudeStudents.findById(sid).populate("courseId");
+    if (!std) {
+      return res.status(404).json({
+        success: false,
+        message: "Student not found",
+      });
+    }
+    res.status(200).json({
+      success: true,
+      message: "Student fetched successfully",
+      data: std,
     });
   } catch (error) {
     next(error);
@@ -72,6 +100,31 @@ exports.postPayFee = async (req, res, next) => {
       success: true,
       message: "Student fee submitted sucessfully",
       data: save,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getAllPaymentbyID = async (req, res, next) => {
+  const { sid } = req.params;
+  if (!sid) {
+    return res.status(400).json({
+      success: false,
+      message: "Student ID is required",
+    });
+  }
+  try {
+    const payments = await Payments.find({ studentId: sid }).sort({
+      createdAt: -1,
+    });
+    res.status(200).json({
+      success: true,
+      message:
+        payments.length === 0
+          ? "No payments found"
+          : "Payments fetched successfully",
+      data: payments || [],
     });
   } catch (error) {
     next(error);

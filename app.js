@@ -12,6 +12,7 @@ const courseRouter = require("./Router/courseRouter");
 const institudeRouter = require("./Router/institudeRouter");
 const announcementRouter = require("./Router/announcementRouter");
 const stdyMatarialRouter = require("./Router/stdyMatarialRouter");
+const healthRouter = require("./Router/healthRouter");
 
 const app = express();
 
@@ -21,7 +22,7 @@ app.use(
   }),
 );
 app.use(express.json());
-
+app.use("/api/health", healthRouter);
 app.use("/api/course", courseRouter);
 app.use("/api/announcement", announcementRouter);
 app.use("/api/stdyMaterialFile", stdyMatarialRouter);
