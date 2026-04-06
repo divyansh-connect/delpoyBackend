@@ -8,9 +8,14 @@ const authMiddleware = require("../Middleware/authMiddleware");
 const institudeRouter = express.Router();
 
 institudeRouter.use(authMiddleware);
-institudeRouter.get("/students", institudeController.getAllStudents);
+institudeRouter.get(
+  "/studentsandpay",
+  institudeController.getAllStudentsAndPay,
+);
 institudeRouter.get("/student/:sid", institudeController.getStudentbyID);
 institudeRouter.get("/payments/:sid", institudeController.getAllPaymentbyID);
+institudeRouter.get("/documents/:sid", institudeController.getAllDocumentbyID);
+
 institudeRouter.post(
   "/admission",
   admFromVadidator,
@@ -21,4 +26,6 @@ institudeRouter.post(
   stdFeePayValidator,
   institudeController.postPayFee,
 );
+
+institudeRouter.put("/documents/:sid", institudeController.putMarkbyID);
 module.exports = institudeRouter;

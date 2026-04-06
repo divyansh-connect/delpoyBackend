@@ -3,6 +3,7 @@ require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const multer = require("multer");
 
 // Local Module
 const libaryRouter = require("./Router/libaryRouter");
@@ -21,6 +22,7 @@ app.use(
     origin: "*",
   }),
 );
+
 app.use(express.json());
 app.use("/api/health", healthRouter);
 app.use("/api/course", courseRouter);
@@ -30,6 +32,30 @@ app.use("/api/institude", institudeRouter);
 app.use("/api/upload", uploadRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/library", libaryRouter);
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ message: "Route not found" });
+});
+// MulterError handler
+app.use((err, req, res, next) => {
+  // multer size error
+  if (err instanceof multer.MulterError) {
+    return res.status(400).json({
+      message: err.message,
+    });
+  }
+  // custom file type error
+  if (err.message === "Only vaild files images allowed") {
+    return res.status(400).json({
+      message: err.message,
+    });
+  }
+  // fallback error
+  return res.status(500).json({
+    message: err.message || "Something went wrong",
+  });
+});
 
 const PORT = process.env.PORT;
 mongoose

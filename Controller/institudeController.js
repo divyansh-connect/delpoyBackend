@@ -1,5 +1,6 @@
 const InstitudeStudents = require("../Model/institudeStudents");
 const Payments = require("../Model/payment");
+const StudDocument = require("../Model/studDocument");
 
 exports.postInstitudeAdmForm = async (req, res, next) => {
   try {
@@ -43,14 +44,31 @@ exports.postInstitudeAdmForm = async (req, res, next) => {
   }
 };
 
-exports.getAllStudents = async (req, res, next) => {
+exports.getAllStudentsAndPay = async (req, res, next) => {
   try {
-    const stdLists = await InstitudeStudents.find().populate("courseId");
+    const students = await InstitudeStudents.find({
+      isDeleted: false,
+    }).populate("courseId");
+    const result = [];
+    for (const student of students) {
+      const payments = await Payments.find({ studentId: student._id });
+      const totalPaid = payments.reduce((sum, pay) => sum + pay.amount, 0);
+      const remaining = student.courseId.courseTotalFees - totalPaid;
+      result.push({
+        _id: student._id,
+        stdName: student.stdName,
+        stdFathOrHus: student.stdFathOrHus,
+        stdPhone: student.stdPhone,
+        courseId: student.courseId,
+        totalPaid,
+        remaining,
+      });
+    }
 
     res.status(200).json({
       success: true,
       message: "All students fetched",
-      data: stdLists,
+      data: result,
     });
   } catch (error) {
     next(error);
@@ -74,10 +92,18 @@ exports.getStudentbyID = async (req, res, next) => {
         message: "Student not found",
       });
     }
+    const payment = await Payments.find({ studentId: std._id });
+    const totalPaid = payment.reduce((sum, pay) => sum + Number(pay.amount), 0);
+
+    const finalStudent = {
+      ...std.toObject(),
+      totalPaid,
+    };
+
     res.status(200).json({
       success: true,
       message: "Student fetched successfully",
-      data: std,
+      data: finalStudent,
     });
   } catch (error) {
     next(error);
@@ -125,6 +151,65 @@ exports.getAllPaymentbyID = async (req, res, next) => {
           ? "No payments found"
           : "Payments fetched successfully",
       data: payments || [],
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getAllDocumentbyID = async (req, res, next) => {
+  const { sid } = req.params;
+  if (!sid) {
+    return res.status(400).json({
+      success: false,
+      message: "Student ID is required",
+    });
+  }
+  try {
+    const payments = await StudDocument.find({ studentId: sid });
+    res.status(200).json({
+      success: true,
+      message:
+        payments.length === 0
+          ? "No documents found"
+          : "Documents fetched successfully",
+      data: payments || [],
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.putMarkbyID = async (req, res, next) => {
+  const { sid } = req.params;
+
+  try {
+    if (!sid) {
+      return res.status(400).json({
+        message: "Student document ID is required",
+      });
+    }
+
+    const updatedDoc = await StudDocument.findByIdAndUpdate(
+      sid,
+      {
+        isIssued: true,
+        isIssuedDate: new Date(),
+      },
+      { returnDocument: "after" },
+    );
+
+    if (!updatedDoc) {
+      return res.status(404).json({
+        success: false,
+        message: "Document not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Document marked as issued",
+      data: updatedDoc,
     });
   } catch (error) {
     next(error);
