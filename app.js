@@ -14,6 +14,7 @@ const institudeRouter = require("./Router/institudeRouter");
 const announcementRouter = require("./Router/announcementRouter");
 const stdyMatarialRouter = require("./Router/stdyMatarialRouter");
 const healthRouter = require("./Router/healthRouter");
+const dashBoardRouter = require("./Router/dashBoardRouter");
 
 const app = express();
 
@@ -25,12 +26,13 @@ app.use(
 
 app.use(express.json());
 app.use("/api/health", healthRouter);
+app.use("/api/auth", authRouter);
+app.use("/api/dashboard", dashBoardRouter);
 app.use("/api/course", courseRouter);
 app.use("/api/announcement", announcementRouter);
 app.use("/api/stdyMaterialFile", stdyMatarialRouter);
 app.use("/api/institude", institudeRouter);
 app.use("/api/upload", uploadRouter);
-app.use("/api/auth", authRouter);
 app.use("/api/library", libaryRouter);
 
 // 404 handler

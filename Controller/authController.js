@@ -11,6 +11,28 @@ exports.getVerify = (req, res, next) => {
   });
 };
 
+exports.getAllMember = async (req, res, next) => {
+  try {
+    const member = await Auth.find({ isHidden: false }).select(
+      "firstName lastName userName role",
+    );
+    if (member.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No members found",
+        data: [],
+      });
+    }
+    res.status(200).json({
+      success: true,
+      message: "All members fetched successfully",
+      data: member,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.postLogin = async (req, res, next) => {
   const { userName, userPassword } = req.body;
   const user = await Auth.findOne({ userName: userName });
@@ -25,9 +47,13 @@ exports.postLogin = async (req, res, next) => {
     return res.status(401).json({ message: "Invaild password" });
   }
 
-  const token = jwt.sign({ userName: user.userName }, process.env.JWT_SECRET, {
-    expiresIn: "2h",
-  });
+  const token = jwt.sign(
+    { userName: user.userName, firstName: user.firstName, role: user.role },
+    process.env.JWT_SECRET,
+    {
+      expiresIn: "2h",
+    },
+  );
 
   res.json({
     message: "Login successful",
@@ -36,29 +62,37 @@ exports.postLogin = async (req, res, next) => {
 };
 
 exports.postSignUp = async (req, res, next) => {
-  try {
-    const signUp = {
-      firstName: "Divyansh",
-      lastName: "SuperAdmin",
-      email: "essencedivine.connect@gmail.com",
-      phone: "7389558879",
-      userName: "SuperAdmin",
-      userPassword: "SuperAdmin",
-      role: "admin",
-    };
+  const { firstName, lastName, email, phone, userName, userPassword, role } =
+    req.body;
 
-    const hash = await bcrypt.hash(signUp.userPassword, 10);
-    const save = await Auth.create({
-      firstName: signUp.firstName,
-      lastName: signUp.lastName,
-      email: signUp.email,
-      phone: signUp.phone,
-      userName: signUp.userName,
-      userPassword: hash,
-      role: signUp.role,
+  // validator
+  if (!firstName || !email || !phone || !userName || !userPassword) {
+    return res
+      .status(400)
+      .json({ message: "All required fields must be filled" });
+  }
+  if (userPassword.length < 6) {
+    return res.status(400).json({
+      message: "Password must be at least 6 characters",
     });
-    res.json({ message: "User Created", save });
+  }
+
+  try {
+    const hash = await bcrypt.hash(userPassword, 10);
+    const save = await Auth.create({
+      firstName: firstName,
+      lastName: lastName,
+      email: email,
+      phone: phone,
+      userName: userName,
+      userPassword: hash,
+      role: role,
+    });
+
+    res
+      .status(201)
+      .json({ success: true, message: "User Created", data: save });
   } catch (error) {
-    res.status(500).json({ message: "Error", err });
+    next(error);
   }
 };

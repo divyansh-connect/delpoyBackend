@@ -15,14 +15,12 @@ const authSchema = new mongoose.Schema(
     email: {
       type: String,
       required: true,
-      unique: true,
       lowercase: true,
       trim: true,
     },
     phone: {
       type: String,
       required: true,
-      unique: true,
     },
     userName: {
       type: String,
@@ -35,9 +33,10 @@ const authSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["admin", "staff"],
+      enum: ["head", "admin", "staff"],
       default: "staff",
     },
+    isHidden: { type: Boolean, default: false },
   },
   {
     timestamps: true,
