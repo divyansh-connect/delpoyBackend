@@ -15,6 +15,7 @@ const announcementRouter = require("./Router/announcementRouter");
 const stdyMatarialRouter = require("./Router/stdyMatarialRouter");
 const healthRouter = require("./Router/healthRouter");
 const dashBoardRouter = require("./Router/dashBoardRouter");
+const galleryRouter = require("./Router/galleryRouter");
 
 const app = express();
 
@@ -34,6 +35,7 @@ app.use("/api/stdyMaterialFile", stdyMatarialRouter);
 app.use("/api/institude", institudeRouter);
 app.use("/api/upload", uploadRouter);
 app.use("/api/library", libaryRouter);
+app.use("/api/gallery", galleryRouter);
 
 // 404 handler
 app.use((req, res) => {

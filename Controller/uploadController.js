@@ -2,6 +2,7 @@ const StudDocument = require("../Model/studDocument");
 const StudyMaterial = require("../Model/studyMaterial");
 const InstitudeStudents = require("../Model/institudeStudents");
 const { bucket } = require("../config/firebaseAdmin");
+const GalleryPhoto = require("../Model/galleryPhoto");
 
 exports.postStdAdmPhoto = async (req, res, next) => {
   const file = req.file;
@@ -22,7 +23,8 @@ exports.postStdAdmPhoto = async (req, res, next) => {
 
   try {
     // Upload
-    const fileName = `images/${Date.now()}-${file.originalname}`;
+    const safeName = file.originalname.replace(/\s+/g, "-");
+    const fileName = `images/${Date.now()}-${safeName}`;
     const fileUpload = bucket.file(fileName);
 
     await new Promise((resolve, reject) => {
@@ -77,7 +79,8 @@ exports.postStdyMaterialFile = async (req, res, next) => {
   }
   try {
     // Upload
-    const fileName = `pdfs/${Date.now()}-${file.originalname}`;
+    const safeName = file.originalname.replace(/\s+/g, "-");
+    const fileName = `pdfs/${Date.now()}-${safeName}`;
     const fileUpload = bucket.file(fileName);
 
     await new Promise((resolve, reject) => {
@@ -133,8 +136,8 @@ exports.postStdDocument = async (req, res, next) => {
     }
 
     // Upload to Firebase
-
-    const fileName = `documents/${Date.now()}-${file.originalname}`;
+    const safeName = file.originalname.replace(/\s+/g, "-");
+    const fileName = `documents/${Date.now()}-${safeName}`;
     const fileUpload = bucket.file(fileName);
 
     await new Promise((resolve, reject) => {
@@ -223,6 +226,109 @@ exports.deleteStdyMaterial = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       message: "Study material deleted successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.postUploadGallery = async (req, res, next) => {
+  const file = req.file;
+  if (!file) {
+    return res.status(400).json({ message: "File required" });
+  }
+
+  try {
+    // Upload
+    const safeName = file.originalname.replace(/\s+/g, "-");
+    const fileName = `gallery/${Date.now()}-${safeName}`;
+    const fileUpload = bucket.file(fileName);
+
+    await new Promise((resolve, reject) => {
+      const stream = fileUpload.createWriteStream({
+        metadata: {
+          contentType: file.mimetype,
+        },
+      });
+      stream.on("error", reject);
+      stream.on("finish", resolve);
+      stream.end(file.buffer);
+    });
+    await fileUpload.makePublic();
+    const fileUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+
+    const save = await GalleryPhoto.create({
+      fileUrl,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Gallery photo uploaded successfully ",
+      data: save,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.deleteGalleryPhoto = async (req, res, next) => {
+  const { id, url } = req.body;
+
+  // Check
+  if (!id || !url) {
+    return res.status(400).json({
+      success: false,
+      message: "Required fields missing",
+    });
+  }
+  try {
+    // check gallery Photo
+    const photo = await GalleryPhoto.findById(id);
+
+    if (!photo) {
+      return res.status(404).json({
+        success: false,
+        message: "Gallery photo not found",
+      });
+    }
+    if (photo.fileUrl !== url) {
+      return res.status(400).json({
+        success: false,
+        message: "Gallery photo not match",
+      });
+    }
+
+    // extract firebase file path
+    const baseUrl = `https://storage.googleapis.com/${bucket.name}/`;
+    const filePath = photo.fileUrl.startsWith(baseUrl)
+      ? photo.fileUrl.replace(baseUrl, "")
+      : null;
+
+    if (!filePath) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid file",
+      });
+    }
+    const file = bucket.file(filePath);
+    const [exists] = await file.exists();
+    if (!exists) {
+      return res.status(404).json({
+        success: false,
+        message: "Photo already deleted or not found",
+      });
+    }
+
+    // delete from firebase
+    await file.delete();
+
+    // Delete from DB
+    await photo.deleteOne();
+
+    // Response
+    return res.status(200).json({
+      success: true,
+      message: "Gallery Photo deleted successfully",
     });
   } catch (error) {
     next(error);
